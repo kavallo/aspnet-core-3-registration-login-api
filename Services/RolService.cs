@@ -1,8 +1,11 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using WebApi.Entities;
+using WebApi.Helpers;
 using WebApi.Migrations.SqlServerMigrations;
 
 namespace WebApi.Services
@@ -18,9 +21,37 @@ namespace WebApi.Services
 
     public class RolService : IRolService
     {
+        private DataContext _context;
+
+        public RolService(DataContext context)
+        {
+            _context = context;
+        }
+
         public Rol Create(Rol rol)
         {
-            throw new NotImplementedException();
+            try
+            {
+                var _entidad_descripcion_existe = _context.Roles.Where(x => x.Descripcion.ToString().Trim() == rol.Descripcion.ToString().Trim()).FirstOrDefault();
+                if (_entidad_descripcion_existe != null)
+                {
+                    throw new AppException("La descripción del rol ya existe!");
+                }
+                else
+                {
+                    Rol _nuevaEntidad = new Rol();
+                    _nuevaEntidad.Descripcion = rol.Descripcion.ToString().Trim();
+
+                    _context.Add(_nuevaEntidad);
+                    _context.SaveChanges();
+
+                    return rol;
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         public void Delete(int rolId)
@@ -30,7 +61,7 @@ namespace WebApi.Services
 
         public IEnumerable<Rol> GetAll()
         {
-            throw new NotImplementedException();
+            return _context.Roles;
         }
 
         public Rol GetById(int rolId)
